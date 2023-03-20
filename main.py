@@ -3,13 +3,7 @@ import os
 import sys
 import json
 
-execution_path=os.getcwd()
-
-def json_read(filepath): #读取中英对照的外部json文件
-    lud=open('translate.json','r',encoding='utf-8')
-    dict=json.load(lud)
-    lud.close()
-    return dict
+execution_path=os.getcwd()  
 
 def get_arg(par):
     global filepath
@@ -22,7 +16,7 @@ def get_arg(par):
         #elif argv[arg] == '-l' 接受其它参数，暂时空置
     return value
 
-def img_dt(img_path,lut): #融合imageAI的识别函数
+def img_dt(img_path): #融合imageAI的识别函数
     detector = ObjectDetection()
     detector.setModelTypeAsYOLOv3()
     detector.setModelPath(os.path.join(execution_path , "model/yolov3.pt"))
@@ -32,7 +26,7 @@ def img_dt(img_path,lut): #融合imageAI的识别函数
     num=[]
     objectList={}
     for object in detections:
-        obj=lut[object['name']]
+        obj=[object['name']]
         if obj not in lst:
             #print(obj)
             lst.append(obj)
@@ -41,11 +35,26 @@ def img_dt(img_path,lut): #融合imageAI的识别函数
             num[lst.index(obj)]+=1
     for object in lst:
         i = lst.index(object)
-        objectList[object]=num[i]
+        objectList[object[0]] = num[i]
         #print(object+':'+str(num[i]))
     return lst,num
 
-#result=img_dt("multiPeople.png",json_read('translate.json')) 本行用于测试
-path=get_arg('')
-files=os.listdir(path)
-print(files[100])
+#读取中英对照的外部json文件
+lud=open('translate.json','r',encoding='utf-8')
+dict=json.load(lud)
+lud.close()
+
+#读取指定目录下的jpg/jpeg/png图片文件
+files=os.listdir(get_arg('-i'))
+file_list=[]
+for file in files:
+    if file[-3:] in ['jpg','JPG','PNG','png']:
+        file_list.append(file)
+
+#result=img_dt("images/multiPeople.png",json_read('translate.json'))
+for file in file_list:
+    print(get_arg('-i')+'\\'+file)
+    output=img_dt(get_arg('-i')+'\\'+file)
+    for item in output[0]:
+        no=output[0].index(item)
+        print(dict[item[0]]+' : '+str(output[1][no]))
